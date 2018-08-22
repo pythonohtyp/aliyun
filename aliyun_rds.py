@@ -71,4 +71,4 @@ if __name__ == '__main__':
                     print clt.do_action_with_exception(grant_game)
     except Exception,e:
         print Exception,":",e
-
+#
