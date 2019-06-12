@@ -1,0 +1,75 @@
+# encoding: utf-8
+from aliyun.log import *
+import Tkinter as tk
+from ScrolledText import ScrolledText
+import datetime
+
+class alis:
+    def __init__(self,endpoint,access_key_id,access_key):
+        self.endpoint = endpoint  # 选择与上面步骤创建Project所属区域匹配的Endpoint
+        self.access_key_id = access_key_id  # 使用您的阿里云访问密钥AccessKeyId
+        self.access_key = access_key  # 使用您的阿里云访问密钥AccessKeySecret
+        self.project = 'k8s-log-custom-gjy-pro'  # 上面步骤创建的项目名称
+        self.logstore = 'k8s-stdout'  # 上面步骤创建的日志库名称
+        self.query = queryList.get()
+        self.from_time = startTime.get()
+        self.to_time = endTime.get()
+        self.topic = ""
+        self.source = ""
+    def get_logstores(self):
+        clt = LogClient(self.endpoint, self.access_key_id, self.access_key)
+        # list 所有的logstore
+        req1 = ListLogstoresRequest(self.project)
+        res1 = clt.list_logstores(req1)
+        return res1.log_print()
+    def get_logs(self):
+        clt = LogClient(self.endpoint, self.access_key_id, self.access_key)
+        res2 = clt.get_log(project=self.project,logstore=self.logstore,from_time=self.from_time,to_time=self.to_time,query=self.query,size=3)
+        return res2
+def download_logs():
+    ali = alis('cn-hangzhou.log.aliyuncs.com', 'ACCESS_KEY', 'ACCESS_SECERT')
+    body = ali.get_logs().body
+    # header = ali.get_logs().headers
+    return body
+def dispose_logs():
+    a = download_logs()
+    for item in a:
+        reslut = item.get('content')
+        yield reslut
+def save_logs():
+    with open('test.txt', 'w') as f:
+        for i in dispose_logs():
+            f.write(str(i))
+nowTime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+pastTime = (datetime.datetime.now()-datetime.timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S')
+root = tk.Tk()
+root.title("日志下载工具")
+root.geometry('500x500')
+startTime = tk.StringVar(value=pastTime+"+08:00")
+endTime = tk.StringVar(value=nowTime+"+08:00")
+queryList = tk.StringVar(value="_container_name_:mdm-biz")
+label = tk.Label(root, text="线上日志下载",font=('Arial',15,),height=4).grid(row=0, column=0)
+tk.Label(root,text="--------------------------------------------------------------------------------------------------",height=1).grid(row=2, columnspan=3)
+tk.Label(root,text="下载",height=1).grid(row=2, columnspan=2)
+# photo = tk.PhotoImage(file="logo.gif")
+# label = tk.Label(image=photo)
+# label.image = photo
+# label.grid(row=0,column=0,columnspan=1)
+tk.Button(root,text="文件下载",command=save_logs,bg='white',height=1).grid(row=6, column=1,sticky=tk.E)
+
+# tk.Button(root,text="大文件下载",command=save_logs,bg='white',height=1).grid(row=7, column=1,sticky=tk.E)
+tk.Label(root, text='开始时间：', width=8,bg='green').grid(row=3, sticky=tk.E)
+input_startTime = tk.Entry(root, textvariable=startTime,width=30).grid(row=3, column=1)
+tk.Label(root, text='结束时间：', width=8,bg='red').grid(row=4, sticky=tk.E)
+input_endTime = tk.Entry(root,textvariable=endTime, width=30).grid(row=4, column=1)
+tk.Label(root, text='应用名称：', width=8,bg='orange').grid(row=5, sticky=tk.E)
+input_Query = tk.Entry(root,textvariable=queryList, width=30).grid(row=5, column=1)
+text_output = ScrolledText(root,width=66)   #use ScrolledText(下拉条)
+text_output.grid(row=9, columnspan=2)
+
+# text_output = tk.Text(root,width=70)
+# text_output.pack(side='left',fill='y')
+# text_output.grid()
+
+if __name__ == '__main__':
+    root.mainloop()
