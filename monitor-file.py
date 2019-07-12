@@ -28,7 +28,7 @@ def dingdingwarning():
     HEADERS = {
         "Content-Type": "application/json ;charset=utf-8 "
     }
-    message = city +"flume队列已满,请重启应用."
+    message = city +"flume队列已满,请重启应用。"
 
     String_textMsg = {
         "msgtype": "text",
