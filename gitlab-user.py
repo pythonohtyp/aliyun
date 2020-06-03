@@ -3,11 +3,11 @@ from collections import defaultdict
 gl = gitlab.Gitlab('http://gitlab.example.com/',private_token='XXXXX',api_version='4')
 # projects = gl.projects.list(all=True)
 # print(projects)
-users = gl.users.list(all=True)  #拿到所有用户
+users = gl.users.list(active=True,all=True)  #拿到所有用户
 u = [user.name for user in users] #生成用户列表
 projects = gl.projects.list(all=True)   #拿到所有项目
 print(u)
-for i in u:
+for i in u:  #只包含除组以外个人加入的项目
     name_dict = defaultdict(list)
     for project in projects:
         # print(project.id, project.name)
@@ -16,6 +16,16 @@ for i in u:
         if i in tuple(a):
             name_dict[i].append(project.path_with_namespace) #生成以用户名为key，项目名为value列表的字典
     print(name_dict)
+ 
+for i in u:  #只包含人所在的组
+    name_dict = defaultdict(list)
+    for group in groups:
+        # print(project.id, project.name)
+        members = group.members.list()
+        a = [me.name for me in members]
+        if i in tuple(a):
+            name_dict[i].append(group.full_path)  #拿到用户拥有的所有组
+    print(name_dict)
     
     
-    #没有去掉黑名单，和无项目的人，要自己筛选
+    #去掉黑名单，无项目的人要自己筛选
